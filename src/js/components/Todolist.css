@@ -1,0 +1,67 @@
+/* App.css */
+body {
+  font-family: sans-serif;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  padding-top: 50px;
+}
+
+.app {
+  background: white;
+  width: 400px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-bottom: 1px solid #918181;
+  font-size: 16px;
+  outline: none;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.task {
+  padding: 10px;
+  border-bottom: 1px solid #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.task .delete {
+  display: none;
+  cursor: pointer;
+}
+
+.task:hover .delete {
+  display: inline;
+}
+
+.no-tasks {
+  color: #bdbdbd;
+  text-align: center;
+  padding: 10px;
+}
+
+.counter {
+  text-align: right;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #474747;
+}
