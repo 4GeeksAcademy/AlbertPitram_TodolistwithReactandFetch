@@ -1,107 +1,160 @@
+import React, { useEffect, useState } from "react";
 
-
-
- import React, { useEffect, useState } from 'react';
-import './Todolist.css';
-
-const USERNAME = 'Pitramgod';
-const API_URL = `https://playground.4geeks.com/apis/fake/todos/user/${USERNAME}`;
+const USERNAME = "AlbertTroll";
+const API_BASE = "https://playground.4geeks.com/todo";
 
 function Todolist() {
   const [tasks, setTasks] = useState([]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   
   useEffect(() => {
     fetchTasks();
   }, []);
 
+  
   const fetchTasks = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(`${API_BASE}/users/${USERNAME}`);
       if (res.ok) {
         const data = await res.json();
-        setTasks(data);
+        
+        const todos = data.todos || [];
+        
+        const formatted = todos.map((t) => ({
+          id: t.id,
+          label: t.label,
+          done: t.is_done,
+        }));
+        setTasks(formatted);
       } else if (res.status === 404) {
-        console.warn('Usser not found creating one');
+        
         await createUser();
       } else {
-        console.error('Error loading tasks:', res.status);
-        setError('Error loading tasks');
+        setError("Error loading tasks");
       }
     } catch (err) {
-      console.error('Network error loading:', err);
-      setError('Network error loading');
+      setError("Network error");
+      console.error(err);
     }
+    setLoading(false);
   };
 
+  
   const createUser = async () => {
+    setLoading(true);
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([
-          { label: 'Study React', done: false },
-          { label: 'Learn Python', done: false },
-          { label: 'Comprend C#', done: false }
-        ]),
-      });
-
-      if (res.ok) {
-        console.log('User created with initial tasks');
-        fetchTasks();
-      } else {
-        const err = await res.json();
-        console.error('Error creating user:', err);
-        setError('Error creating user');
-      }
-    } catch (err) {
-      console.error('Network error creating user:', err);
-      setError('Network error creating user');
-    }
-  };
-
-  const updateTasks = async (newTasks) => {
-    try {
-      const res = await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTasks),
+      const res = await fetch(`${API_BASE}/users/${USERNAME}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
         fetchTasks();
       } else {
-        const err = await res.json();
-        console.error('Error updating tasks:', err);
-        setError('Error updating tasks');
+        setError("Error creating user");
       }
     } catch (err) {
-      console.error('Network error creating user:', err);
-      setError('Network error creating user:');
+      setError("Network error creating user");
+      console.error(err);
     }
+    setLoading(false);
   };
 
-  const addTask = () => {
+  
+  const addTask = async () => {
     const label = inputValue.trim();
-    if (label === '') return;
+    if (!label) return;
 
-    const newTasks = [...tasks, { label, done: false }];
-    updateTasks(newTasks);
-    setInputValue('');
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/todos/${USERNAME}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, is_done: false }),
+      });
+      if (res.ok) {
+        const newTask = await res.json();
+        setTasks([...tasks, { id: newTask.id, label: newTask.label, done: newTask.is_done }]);
+        setInputValue("");
+      } else {
+        setError("Error adding task");
+      }
+    } catch (err) {
+      setError("Network erro");
+      console.error(err);
+    }
+    setLoading(false);
   };
 
-  const deleteTask = (index) => {
-    const newTasks = tasks.filter((_, i) => i !== index);
-    updateTasks(newTasks);
+  
+  const updateTask = async (id, updatedTask) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/todos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          label: updatedTask.label,
+          is_done: updatedTask.done,
+        }),
+      });
+      if (res.ok) {
+        
+        setTasks(tasks.map(t => (t.id === id ? updatedTask : t)));
+      } else {
+        setError("Error updating task");
+      }
+    } catch (err) {
+      setError("Error  network");
+      console.error(err);
+    }
+    setLoading(false);
   };
 
-  const clearAllTasks = () => {
-    updateTasks([]);
+  
+  const deleteTask = async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/todos/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setTasks(tasks.filter(t => t.id !== id));
+      } else {
+        setError("Error deleting task");
+      }
+    } catch (err) {
+      setError("Network error deleting task");
+      console.error(err);
+    }
+    setLoading(false);
   };
 
+  
+  const toggleDone = (id) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    updateTask(id, { ...task, done: !task.done });
+  };
+
+ 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') addTask();
+    if (e.key === "Enter") addTask();
+  };
+
+  
+  const clearAllTasks = () => {
+   
+    Promise.all(tasks.map(t => deleteTask(t.id))).catch(err => {
+      console.error("Error borrando todas las tareas", err);
+    });
   };
 
   return (
@@ -115,38 +168,44 @@ function Todolist() {
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
+        disabled={loading}
       />
 
-      <ul className="list-group">
-        {tasks.length === 0 ? (
-          <li className="list-group-item text-muted">No tasks, add one!</li>
-        ) : (
-          tasks.map((task, index) => (
-            <li
-              key={index}
-              className="list-group-item d-flex justify-content-between align-items-center"
-            >
-              <span>{task.label}</span>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => deleteTask(index)}
-              >
-                ✖
-              </button>
-            </li>
-          ))
-        )}
-      </ul>
+   <ul className="list-group">
+  {tasks.length === 0 ? (
+    <li className="list-group-item text-muted">No tasks, add one!</li>
+  ) : (
+    tasks.map((task) => (
+      <li
+        key={task.id}
+        className="list-group-item d-flex justify-content-between align-items-center"
+      >
+        <span style={{ textDecoration: task.done ? "line-through" : "none" }}>
+          {task.label}
+        </span>
+        <div>
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => deleteTask(task.id)}
+            disabled={loading}
+          >
+            ✖
+          </button>
+        </div>
+      </li>
+    ))
+  )}
+</ul>
 
       <div className="mt-3 text-center">
         <small className="text-muted">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+          {tasks.length} task{tasks.length !== 1 ? "s" : ""}
         </small>
       </div>
 
       {tasks.length > 0 && (
         <div className="text-center mt-3">
-          <button className="btn btn-warning" onClick={clearAllTasks}>
+          <button className="btn btn-warning" onClick={clearAllTasks} disabled={loading}>
             Clear all
           </button>
         </div>

@@ -1,16 +1,17 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from "react";
+import ReactDOM from "react-dom/client";
 
-// Estils
+// Estilos
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
-import '../styles/index.css';
+import "../styles/index.css";
 
-// Components
-import Home from './components/Home';
+// Importa aquí tu componente Todolist desde la carpeta pages
+import Todolist from "./components/Todolist";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Renderiza el componente principal
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Home />
+    <Todolist />
   </React.StrictMode>
 );
